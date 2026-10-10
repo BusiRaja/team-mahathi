@@ -62,9 +62,7 @@ export default async function Home() {
           </Link>
         ))}
       </section>
-
-      {!isConfigured && <p className="wrap mt-6"><span className="block rounded-xl border border-saffron bg-saffron/15 p-3 text-center text-sm">Preview mode with sample data. Add your Supabase keys in <code>.env.local</code> to go live.</span></p>}
-
+ 
       <div className="wrap mt-10 grid gap-8 lg:grid-cols-3">
         <section>
           <div className="mb-3 flex items-end justify-between"><h2 className="section-title">Latest Announcements</h2><Link href="/updates" className="text-sm font-medium text-burgundy">See all →</Link></div>

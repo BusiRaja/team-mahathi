@@ -35,8 +35,8 @@ export default function Nav({ joinUrl }: { joinUrl: string }) {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-gold/30 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <div className="hidden w-40 items-center gap-2 md:flex">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 max-md:flex-row-reverse">
+          <div className="md:w-40 items-center gap-2 flex">
             <span aria-hidden className="text-lg text-saffron-deep">📍</span>
             <div className="leading-tight">
               <div className="text-sm font-semibold">Gajwel</div>
