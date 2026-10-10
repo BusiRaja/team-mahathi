@@ -105,7 +105,4 @@ insert into public.settings (key, value) values
   ('countdown_label', 'Next celebration begins in'),
   ('countdown_target', '')
 on conflict (key) do nothing;
-
--- ---------- After creating your admin user in Auth → Users, run: ----------
--- insert into public.admins (user_id)
--- select id from auth.users where email = 'you@example.com';
+ 

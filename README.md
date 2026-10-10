@@ -13,7 +13,7 @@ Theme: royal burgundy, saffron, gold, ivory with dedicated Lord Ganesha and Godd
 
 ## Setup
 1. Create a Supabase project.
-2. SQL Editor → run, in order: `supabase/schema.sql`, `supabase/migration-002-mockup-fields.sql` (route/Telugu/engagement fields, subscribers), `supabase/migration-003-comments.sql` (moderated comments).
+2. SQL Editor → run, in order: `supabase/schema.sql`, `supabase/migration-002-mockup-fields.sql` (route/Telugu/engagement fields, subscribers), `supabase/migration-003-comments.sql` (moderated comments), `supabase/migration-004-multilanguage.sql` (Telugu versions of every content field).
 3. Auth → Users → add an admin user (email + password), then run:
    ```sql
    insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';
@@ -23,7 +23,8 @@ Theme: royal burgundy, saffron, gold, ivory with dedicated Lord Ganesha and Godd
 6. `npm install && npm run dev`
 
 ## Language, likes, views and comments
-- Title/description fields have English and Telugu inputs in admin. Pages show Telugu when it is filled, otherwise English.
+- **Language switch:** the header has an EN | తెలుగు toggle. The choice is saved in a `lang` cookie (first visit follows the browser language), and every page, including server-rendered content, is shown in that language. UI text lives in `src/lib/i18n/en.ts` and `te.ts`; add a key to both. Dates, weekdays and months follow the language too.
+- **Bilingual content:** admin has English and Telugu inputs for updates, events (title, description, place, route, organizer, schedule, info), albums, media captions and home-page settings. Visitors see their chosen language and fall back to the other one when a field is empty. Run `supabase/migration-004-multilanguage.sql` to add the new Telugu columns.
 - Views (once per browser session) and likes (once per browser) are stored in `updates`. Comments are public, validated in the database, and can be hidden or deleted in Admin → Comments. A honeypot and a 20-second cooldown deter spam; add a CAPTCHA if the site gets abused.
 
 ## Admin editing

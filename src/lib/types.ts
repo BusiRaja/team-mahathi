@@ -11,7 +11,9 @@ export interface Album {
   id: string;
   year: number;
   title: string;
+  title_te?: string | null;
   description: string | null;
+  description_te?: string | null;
   cover_url: string | null;
 }
 export interface Media {
@@ -23,6 +25,7 @@ export interface Media {
   category: Category;
   deity: Deity;
   caption: string | null;
+  caption_te?: string | null;
   featured: boolean;
   created_at: string;
 }
@@ -56,6 +59,7 @@ export interface FestEvent {
   description: string | null;
   starts_at: string;
   location: string | null;
+  location_te?: string | null;
   deity: Deity;
   title_te?: string | null;
   description_te?: string | null;
@@ -64,9 +68,14 @@ export interface FestEvent {
   route_start?: string | null;
   route_via?: string | null;
   route_end?: string | null;
+  route_start_te?: string | null;
+  route_via_te?: string | null;
+  route_end_te?: string | null;
   organizer?: string | null;
-  schedule?: { time: string; label: string }[] | null;
+  organizer_te?: string | null;
+  schedule?: { time: string; label: string; label_te?: string }[] | null;
   info?: string[] | null;
+  info_te?: string[] | null;
 }
 export type Settings = Record<string, string>;
 

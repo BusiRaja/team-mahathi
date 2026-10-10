@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import UpdateCard, { GROUPS, groupOf } from "./UpdateCard";
+import UpdateCard from "./UpdateCard";
+import { GROUPS, groupOf } from "@/lib/updates-meta";
+import { useLang } from "@/lib/i18n/client";
 import { toText } from "@/lib/text";
 import type { FestUpdate } from "@/lib/types";
 
 export default function UpdatesFeed({ updates }: { updates: FestUpdate[] }) {
+  const { t } = useLang();
   const [group, setGroup] = useState<string>("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<"new" | "old" | "popular">("new");
@@ -26,27 +29,27 @@ export default function UpdatesFeed({ updates }: { updates: FestUpdate[] }) {
       <div className="flex flex-wrap items-center gap-2">
         <div className="no-scrollbar flex gap-2 overflow-x-auto" role="tablist">
           {GROUPS.map((g) => (
-            <button key={g.key} role="tab" aria-selected={group === g.key} onClick={() => setGroup(g.key)} className={`chip ${group === g.key ? "chip-active" : ""}`}><span aria-hidden className="mr-1.5">{g.icon}</span>{g.label}</button>
+            <button key={g.key} role="tab" aria-selected={group === g.key} onClick={() => setGroup(g.key)} className={`chip ${group === g.key ? "chip-active" : ""}`}><span aria-hidden className="mr-1.5">{g.icon}</span>{t(g.labelKey)}</button>
           ))}
         </div>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search updates..." aria-label="Search updates" className="field ml-auto !w-full sm:!w-56" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("updates.search")} aria-label={t("updates.search")} className="field ml-auto !w-full sm:!w-56" />
       </div>
       <div className="mt-6 flex items-center justify-between">
-        <h2 className="section-title">Latest Updates</h2>
+        <h2 className="section-title">{t("updates.latest")}</h2>
         <div className="flex items-center gap-2">
-          <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort updates" className="field !w-auto !py-1.5">
-            <option value="new">Latest First</option><option value="old">Oldest First</option><option value="popular">Most Viewed</option>
+          <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label={t("updates.sort")} className="field !w-auto !py-1.5">
+            <option value="new">{t("updates.sortNew")}</option><option value="old">{t("updates.sortOld")}</option><option value="popular">{t("updates.sortPopular")}</option>
           </select>
           <div className="flex overflow-hidden rounded-lg border border-gold/40 text-sm">
-            <button onClick={() => setList(false)} aria-pressed={!list} className={`px-3 py-1.5 ${!list ? "bg-burgundy text-white" : "bg-white"}`}>Grid</button>
-            <button onClick={() => setList(true)} aria-pressed={list} className={`px-3 py-1.5 ${list ? "bg-burgundy text-white" : "bg-white"}`}>List</button>
+            <button onClick={() => setList(false)} aria-pressed={!list} className={`px-3 py-1.5 ${!list ? "bg-burgundy text-white" : "bg-white"}`}>{t("updates.grid")}</button>
+            <button onClick={() => setList(true)} aria-pressed={list} className={`px-3 py-1.5 ${list ? "bg-burgundy text-white" : "bg-white"}`}>{t("updates.list")}</button>
           </div>
         </div>
       </div>
       <div className={`mt-4 grid gap-4 ${list ? "" : "sm:grid-cols-2 xl:grid-cols-3"}`}>
         {shown.map((u) => <UpdateCard key={u.id} u={u} list={list} />)}
       </div>
-      {!shown.length && <p className="royal-card mt-4 p-8 text-center">No updates match. Try another filter or search.</p>}
+      {!shown.length && <p className="royal-card mt-4 p-8 text-center">{t("updates.noMatch")}</p>}
     </div>
   );
 }

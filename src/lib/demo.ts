@@ -11,13 +11,20 @@ const daysFromNow = (d: number, h = 18) => {
 
 export const demoSettings: Settings = {
   festival_name: "Team Mahathi",
+  festival_name_te: "టీమ్ మహతి",
   tagline: "Festivals • Friendship • Fearless Faith",
+  tagline_line_te: "పండుగలు • స్నేహం • నిర్భయ విశ్వాసం",
+  headline: "In devotion, tradition and unity, that is what makes our Mahathi special!",
   tagline_te: "భక్తి... సంప్రదాయం... ఐక్యతతో... మన మహతి ప్రత్యేకత!",
   subtitle: "Youth bringing tradition to life • Gajwel • Culture • Community",
+  subtitle_te: "సంప్రదాయానికి జీవం పోసే యువత • గజ్వేల్ • సంస్కృతి • సమాజం",
   countdown_label: "Amma arrives in",
+  countdown_label_te: "అమ్మవారి ఆగమనానికి మిగిలింది",
   countdown_target: "",
   hero_script: "Get Ready, Amma Is Coming",
+  hero_script_te: "సిద్ధంగా ఉండండి, అమ్మ వస్తోంది",
   hero_image: "",
+  motto: "In devotion, tradition and unity, let us welcome Amma's arrival together!",
   motto_te: "భక్తి... సంప్రదాయం... ఐక్యతలో... అమ్మవారి ఆగమనాన్ని కలిసికట్టుగా స్వాగతిద్దాం!",
   join_url: "",
 };
@@ -26,23 +33,34 @@ export const demoAlbums: Album[] = [y, y - 1, y - 2, y - 3].map((year, i) => ({
   id: `demo-album-${year}`,
   year,
   title: `Festival ${year}`,
+  title_te: `ఉత్సవం ${year}`,
   description: i === 0 ? "This year's celebrations" : "Cherished memories",
+  description_te: i === 0 ? "ఈ సంవత్సరపు వేడుకలు" : "మధుర జ్ఞాపకాలు",
   cover_url: null,
 }));
 
 export const demoMedia: Media[] = [];
 
 const at = (d: string, t: string) => `2026-10-${d}T${t}:00+05:30`;
-const route = { route_start: "Ayyappa Temple", route_via: "Shivalayam Temple", route_end: "Behind Mahathi Auditorium, Gajwel", organizer: "Team Mahathi" };
+const route = {
+  route_start: "Ayyappa Temple", route_via: "Shivalayam Temple", route_end: "Behind Mahathi Auditorium, Gajwel", organizer: "Team Mahathi",
+  route_start_te: "అయ్యప్ప దేవాలయం", route_via_te: "శివాలయం", route_end_te: "మహతి ఆడిటోరియం వెనుక, గజ్వేల్", organizer_te: "టీమ్ మహతి",
+};
 
 export const demoEvents: FestEvent[] = [
-  { id: "e1", title: "Goddess Durga Mata Aagamanam", title_te: "శ్రీ దుర్గా మాత ఆగమనం", description: "Let us welcome Amma together.", description_te: "<h2 style=\"text-align: center\">అమ్మవారి ఆగమనం</h2><p>అమ్మవారి ఆగమనాన్ని <strong>కలిసికట్టుగా</strong> స్వాగతిద్దాం.</p><ul><li><p>మంగళ హారతులతో రండి</p></li><li><p>సాంప్రదాయ వస్త్రధారణ</p></li></ul><table><tbody><tr><th><p>సమయం</p></th><th><p>కార్యక్రమం</p></th></tr><tr><td><p>7:00 PM</p></td><td><p>శోభాయాత్ర</p></td></tr></tbody></table>", starts_at: at("09", "19:00"), location: "Gajwel", deity: "durga", category: "general", ...route,
-    schedule: [{ time: "6:30 PM", label: "Bhaktha gathering at Ayyappa Temple" }, { time: "7:00 PM", label: "Shobha Yatra begins (Ayyappa Temple)" }, { time: "7:30 PM", label: "Via Shivalayam Temple" }, { time: "8:00 PM", label: "Arrival at Mahathi Auditorium (Behind)" }, { time: "8:30 PM", label: "Pooja, Harathi & cultural program" }],
-    info: ["All are welcome", "Traditional attire preferred", "Follow safety guidelines", "Avoid plastic", "Stay with Team volunteers", "Photos and videos will be shared"] },
-  { id: "e2", title: "Shobha Yatra", title_te: "శోభాయాత్ర", description_te: "భక్తి, వైభవం, ఆధ్యాత్మికతకు ప్రతీకగా వరంవరుగత శోభాయాత్ర.", description: "A grand procession of devotion and togetherness.", starts_at: at("11", "18:30"), location: "Main Roads, Gajwel", deity: "durga", category: "procession", ...route, info: null, schedule: null },
-  { id: "e3", title: "Maha Harathi", title_te: "మహా హారతి", description: "A special harathi for Amma. Everyone is invited.", description_te: "అమ్మవారికి విశేష మహాహారతి కార్యక్రమం. అందరినీ ఆహ్వానిస్తున్నాం.", starts_at: at("12", "19:00"), location: "Mahathi Auditorium, Gajwel", deity: "durga", category: "pooja", organizer: "Team Mahathi", schedule: null, info: null },
-  { id: "e4", title: "Navaratri Celebrations", title_te: "నవరాత్రి ఉత్సవాలు", starts_at: at("15", "19:00"), location: "Mahathi Auditorium", deity: "durga", category: "community", description: null },
-  { id: "e5", title: "Durga Mata Immersion", title_te: "దుర్గా మాత నిమజ్జనం", starts_at: at("24", "17:00"), location: "Godavari Ghat, Gajwel", deity: "durga", category: "procession", description: null },
+  { id: "e1", title: "Goddess Durga Mata Aagamanam", title_te: "శ్రీ దుర్గా మాత ఆగమనం", description: "Let us welcome Amma together.", description_te: "<h2 style=\"text-align: center\">అమ్మవారి ఆగమనం</h2><p>అమ్మవారి ఆగమనాన్ని <strong>కలిసికట్టుగా</strong> స్వాగతిద్దాం.</p><ul><li><p>మంగళ హారతులతో రండి</p></li><li><p>సాంప్రదాయ వస్త్రధారణ</p></li></ul><table><tbody><tr><th><p>సమయం</p></th><th><p>కార్యక్రమం</p></th></tr><tr><td><p>7:00 PM</p></td><td><p>శోభాయాత్ర</p></td></tr></tbody></table>", starts_at: at("09", "19:00"), location: "Gajwel", location_te: "గజ్వేల్", deity: "durga", category: "general", ...route,
+    schedule: [
+      { time: "6:30 PM", label: "Bhaktha gathering at Ayyappa Temple", label_te: "అయ్యప్ప దేవాలయం వద్ద భక్తుల సమావేశం" },
+      { time: "7:00 PM", label: "Shobha Yatra begins (Ayyappa Temple)", label_te: "శోభాయాత్ర ప్రారంభం (అయ్యప్ప దేవాలయం)" },
+      { time: "7:30 PM", label: "Via Shivalayam Temple", label_te: "శివాలయం మీదుగా" },
+      { time: "8:00 PM", label: "Arrival at Mahathi Auditorium (Behind)", label_te: "మహతి ఆడిటోరియం (వెనుక) చేరుకోవడం" },
+      { time: "8:30 PM", label: "Pooja, Harathi & cultural program", label_te: "పూజ, హారతి & సాంస్కృతిక కార్యక్రమం" }],
+    info: ["All are welcome", "Traditional attire preferred", "Follow safety guidelines", "Avoid plastic", "Stay with Team volunteers", "Photos and videos will be shared"],
+    info_te: ["అందరికీ స్వాగతం", "సాంప్రదాయ వస్త్రధారణ ఉత్తమం", "భద్రతా నియమాలు పాటించండి", "ప్లాస్టిక్ వాడకండి", "టీమ్ వాలంటీర్లతో కలిసి ఉండండి", "ఫోటోలు, వీడియోలు షేర్ చేయబడతాయి"] },
+  { id: "e2", title: "Shobha Yatra", title_te: "శోభాయాత్ర", description_te: "భక్తి, వైభవం, ఆధ్యాత్మికతకు ప్రతీకగా వరంవరుగత శోభాయాత్ర.", description: "A grand procession of devotion and togetherness.", starts_at: at("11", "18:30"), location: "Main Roads, Gajwel", location_te: "ప్రధాన రహదారులు, గజ్వేల్", deity: "durga", category: "procession", ...route, info: null, schedule: null },
+  { id: "e3", title: "Maha Harathi", title_te: "మహా హారతి", description: "A special harathi for Amma. Everyone is invited.", description_te: "అమ్మవారికి విశేష మహాహారతి కార్యక్రమం. అందరినీ ఆహ్వానిస్తున్నాం.", starts_at: at("12", "19:00"), location: "Mahathi Auditorium, Gajwel", location_te: "మహతి ఆడిటోరియం, గజ్వేల్", deity: "durga", category: "pooja", organizer: "Team Mahathi", schedule: null, info: null },
+  { id: "e4", title: "Navaratri Celebrations", title_te: "నవరాత్రి ఉత్సవాలు", starts_at: at("15", "19:00"), location: "Mahathi Auditorium", location_te: "మహతి ఆడిటోరియం", deity: "durga", category: "community", description: null },
+  { id: "e5", title: "Durga Mata Immersion", title_te: "దుర్గా మాత నిమజ్జనం", starts_at: at("24", "17:00"), location: "Godavari Ghat, Gajwel", location_te: "గోదావరి ఘాట్, గజ్వేల్", deity: "durga", category: "procession", description: null },
 ];
 
 export const demoUpdates: FestUpdate[] = [

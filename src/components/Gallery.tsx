@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CATEGORIES, type Category, type Deity, type Media } from "@/lib/types";
+import { useLang } from "@/lib/i18n/client";
+import { mediaCaption } from "@/lib/i18n/content";
+import type { Key } from "@/lib/i18n";
 import { optimize } from "@/lib/cloudinary-client";
 
 type Filter<T> = T | "all";
@@ -10,14 +13,13 @@ type Filter<T> = T | "all";
 export default function Gallery({
   items,
   filters = true,
-  empty = "No memories here yet. Check back soon!",
   initialDeity = "all",
 }: {
   items: Media[];
   filters?: boolean;
-  empty?: string;
   initialDeity?: Filter<Deity>;
 }) {
+  const { t, lang } = useLang();
   const [cat, setCat] = useState<Filter<Category>>("all");
   const [deity, setDeity] = useState<Filter<Deity>>(initialDeity);
   const [type, setType] = useState<Filter<"photo" | "video">>("all");
@@ -58,12 +60,12 @@ export default function Gallery({
   }, [open, close, step]);
 
   const share = async (m: Media) => {
-    const data = { title: m.caption ?? "Festival memory", url: m.url };
+    const data = { title: mediaCaption(m, lang) ?? t("gallery.festivalMemory"), url: m.url };
     try {
       if (navigator.share) await navigator.share(data);
       else {
         await navigator.clipboard.writeText(m.url);
-        alert("Link copied!");
+        alert(t("gallery.copied"));
       }
     } catch {}
   };
@@ -75,25 +77,25 @@ export default function Gallery({
       {filters && items.length > 0 && (
         <div className="mb-5 space-y-2">
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-            {([["all", "All"], ["ganesha", "🐘 Ganesha"], ["durga", "🔱 Durgamata"]] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setDeity(v)} className={`chip ${deity === v ? "chip-active" : ""}`}>{l}</button>
+            {([["all", "gallery.all"], ["ganesha", "deity.ganeshaShort"], ["durga", "deity.durgaShort"]] as const).map(([v, l]) => (
+              <button key={v} onClick={() => setDeity(v)} className={`chip ${deity === v ? "chip-active" : ""}`}>{t(l as Key)}</button>
             ))}
             <span className="mx-1 w-px bg-gold/50" />
-            {([["all", "Photos & Videos"], ["photo", "Photos"], ["video", "Videos"]] as const).map(([v, l]) => (
-              <button key={v} onClick={() => setType(v)} className={`chip ${type === v ? "chip-active" : ""}`}>{l}</button>
+            {([["all", "gallery.photosVideos"], ["photo", "gallery.photos"], ["video", "gallery.videos"]] as const).map(([v, l]) => (
+              <button key={v} onClick={() => setType(v)} className={`chip ${type === v ? "chip-active" : ""}`}>{t(l as Key)}</button>
             ))}
           </div>
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-            <button onClick={() => setCat("all")} className={`chip ${cat === "all" ? "chip-active" : ""}`}>All events</button>
+            <button onClick={() => setCat("all")} className={`chip ${cat === "all" ? "chip-active" : ""}`}>{t("gallery.allEvents")}</button>
             {usedCats.map((c) => (
-              <button key={c.value} onClick={() => setCat(c.value)} className={`chip ${cat === c.value ? "chip-active" : ""}`}>{c.label}</button>
+              <button key={c.value} onClick={() => setCat(c.value)} className={`chip ${cat === c.value ? "chip-active" : ""}`}>{t(`cat.${c.value}` as Key)}</button>
             ))}
           </div>
         </div>
       )}
 
       {shown.length === 0 ? (
-        <div className="royal-card p-10 text-center font-serif text-xl text-burgundy/80">{empty}</div>
+        <div className="royal-card p-10 text-center font-serif text-xl text-burgundy/80">{t("gallery.empty")}</div>
       ) : (
         <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
           {shown.map((m, i) => (
@@ -107,16 +109,16 @@ export default function Gallery({
             >
               {m.type === "photo" ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={optimize(m.url, 600)} alt={m.caption ?? "Festival photo"} loading="lazy" className="w-full transition duration-500 group-hover:scale-105" />
+                <img src={optimize(m.url, 600)} alt={mediaCaption(m, lang) ?? t("gallery.festivalPhoto")} loading="lazy" className="w-full transition duration-500 group-hover:scale-105" />
               ) : (
                 <div className="relative">
                   <video src={`${m.url}#t=0.1`} preload="metadata" muted playsInline className="w-full" />
                   <span className="absolute inset-0 grid place-items-center bg-black/25 text-4xl text-white">▶</span>
                 </div>
               )}
-              {m.caption && (
+              {mediaCaption(m, lang) && (
                 <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 text-left text-xs text-white opacity-0 transition group-hover:opacity-100">
-                  {m.caption}
+                  {mediaCaption(m, lang)}
                 </span>
               )}
             </motion.button>
@@ -136,13 +138,13 @@ export default function Gallery({
             <div className="flex items-center justify-between p-3 text-ivory" onClick={(e) => e.stopPropagation()}>
               <span className="text-xs text-gold-light">{(open ?? 0) + 1} / {shown.length}</span>
               <div className="flex gap-2">
-                <button className="btn-ghost !border-gold/60 !py-1.5 !text-ivory" onClick={() => share(current)}>Share</button>
-                <a className="btn-ghost !border-gold/60 !py-1.5 !text-ivory" href={current.url} target="_blank" rel="noreferrer" download>Save</a>
+                <button className="btn-ghost !border-gold/60 !py-1.5 !text-ivory" onClick={() => share(current)}>{t("gallery.share")}</button>
+                <a className="btn-ghost !border-gold/60 !py-1.5 !text-ivory" href={current.url} target="_blank" rel="noreferrer" download>{t("gallery.save")}</a>
                 <button className="btn-royal !py-1.5" onClick={close}>✕</button>
               </div>
             </div>
             <div className="relative flex flex-1 items-center justify-center overflow-hidden px-2" onClick={(e) => e.stopPropagation()}>
-              <button aria-label="Previous" onClick={() => step(-1)} className="absolute left-2 z-10 rounded-full bg-black/50 px-3 py-2 text-2xl text-gold-light">‹</button>
+              <button aria-label={t("gallery.prev")} onClick={() => step(-1)} className="absolute left-2 z-10 rounded-full bg-black/50 px-3 py-2 text-2xl text-gold-light">‹</button>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={current.id}
@@ -159,15 +161,15 @@ export default function Gallery({
                 >
                   {current.type === "photo" ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={optimize(current.url, 1600)} alt={current.caption ?? ""} className="max-h-[78vh] max-w-full rounded-lg object-contain" />
+                    <img src={optimize(current.url, 1600)} alt={mediaCaption(current, lang) ?? ""} className="max-h-[78vh] max-w-full rounded-lg object-contain" />
                   ) : (
                     <video src={current.url} controls autoPlay playsInline className="max-h-[78vh] max-w-full rounded-lg" />
                   )}
                 </motion.div>
               </AnimatePresence>
-              <button aria-label="Next" onClick={() => step(1)} className="absolute right-2 z-10 rounded-full bg-black/50 px-3 py-2 text-2xl text-gold-light">›</button>
+              <button aria-label={t("gallery.next")} onClick={() => step(1)} className="absolute right-2 z-10 rounded-full bg-black/50 px-3 py-2 text-2xl text-gold-light">›</button>
             </div>
-            {current.caption && <p className="p-3 text-center font-serif text-lg text-ivory">{current.caption}</p>}
+            {mediaCaption(current, lang) && <p className="p-3 text-center font-serif text-lg text-ivory">{mediaCaption(current, lang)}</p>}
           </motion.div>
         )}
       </AnimatePresence>

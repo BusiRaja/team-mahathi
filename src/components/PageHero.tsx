@@ -1,8 +1,7 @@
-import RichText from "@/components/RichText";
-
+/** Dark burgundy banner used by Events, Updates and Albums. Pass a hero_image URL to show the deity photo. */
 export default function PageHero({
-  title, kicker, telugu, script, image, children,
-}: { title: string; kicker?: string; telugu?: string; script?: string[]; image?: string; children?: React.ReactNode }) {
+  title, kicker, sub, script, image, children,
+}: { title: string; kicker?: string; sub?: string; script?: string[]; image?: string; children?: React.ReactNode }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-r from-[#3a0710] via-burgundy-dark to-burgundy text-ivory">
       {image && (
@@ -14,7 +13,7 @@ export default function PageHero({
         <div>
           <h1 className="font-display text-4xl font-bold text-white md:text-6xl">{title}</h1>
           {kicker && <p className="mt-1 text-xs tracking-[0.35em] text-gold-light md:text-sm">{kicker}</p>}
-          {telugu && <RichText html={telugu} className="mt-2 font-serif text-lg text-white" />}
+          {sub && <p className="mt-3 font-telugu text-sm text-ivory/90 md:text-lg">{sub}</p>}
           {children}
         </div>
         {script && (

@@ -125,6 +125,7 @@ function MediaTab({ albums, say }: { albums: Album[]; say: (m: string) => void }
   const [category, setCategory] = useState("general");
   const [deity, setDeity] = useState("both");
   const [caption, setCaption] = useState("");
+  const [captionTe, setCaptionTe] = useState("");
   const [featured, setFeatured] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -163,6 +164,7 @@ function MediaTab({ albums, say }: { albums: Album[]; say: (m: string) => void }
         storage_path: up.public_id, // Cloudinary public_id
         category, deity,
         caption: caption || null,
+        caption_te: captionTe || null,
         featured,
       });
       if (dbErr) {
@@ -204,7 +206,10 @@ function MediaTab({ albums, say }: { albums: Album[]; say: (m: string) => void }
             {DEITIES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select>
         </div>
-        <input className="field" placeholder="Caption (optional, applied to all)" value={caption} onChange={(e) => setCaption(e.target.value)} />
+        <div className="grid gap-3 md:grid-cols-2">
+          <input className="field" placeholder="Caption in English (optional, applied to all)" value={caption} onChange={(e) => setCaption(e.target.value)} />
+          <input className="field font-telugu" placeholder="క్యాప్షన్ (తెలుగు, ఐచ్ఛికం)" value={captionTe} onChange={(e) => setCaptionTe(e.target.value)} />
+        </div>
         <input className="field" type="file" accept="image/*,video/*" multiple onChange={(e) => setFiles(Array.from(e.target.files ?? []))} />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} /> Show on home page</label>
         <button className="btn-royal" disabled={busy}>{busy ? progress : `Upload ${files.length || ""} file(s)`}</button>
@@ -223,10 +228,10 @@ function MediaCard({ m, albums, onFeature, onRemove, onSaved, say }: {
   m: Media; albums: Album[]; onFeature: () => void; onRemove: () => void; onSaved: () => void; say: (msg: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [v, setV] = useState({ caption: m.caption ?? "", category: m.category as string, deity: m.deity as string, album_id: m.album_id });
+  const [v, setV] = useState({ caption: m.caption ?? "", caption_te: m.caption_te ?? "", category: m.category as string, deity: m.deity as string, album_id: m.album_id });
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase!.from("media").update({ caption: v.caption.trim() || null, category: v.category, deity: v.deity, album_id: v.album_id }).eq("id", m.id);
+    const { error } = await supabase!.from("media").update({ caption: v.caption.trim() || null, caption_te: v.caption_te.trim() || null, category: v.category, deity: v.deity, album_id: v.album_id }).eq("id", m.id);
     if (error) return say(error.message);
     say("Saved"); setOpen(false); onSaved();
   };
@@ -245,7 +250,8 @@ function MediaCard({ m, albums, onFeature, onRemove, onSaved, say }: {
         </div>
         {open && (
           <form onSubmit={save} className="space-y-2 pt-2">
-            <input className="field !py-1.5 font-telugu" placeholder="Caption" value={v.caption} onChange={(e) => setV({ ...v, caption: e.target.value })} />
+            <input className="field !py-1.5" placeholder="Caption (English)" value={v.caption} onChange={(e) => setV({ ...v, caption: e.target.value })} />
+            <input className="field !py-1.5 font-telugu" placeholder="క్యాప్షన్ (తెలుగు)" value={v.caption_te} onChange={(e) => setV({ ...v, caption_te: e.target.value })} />
             <select className="field !py-1.5" value={v.category} onChange={(e) => setV({ ...v, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
             <select className="field !py-1.5" value={v.deity} onChange={(e) => setV({ ...v, deity: e.target.value })}>{DEITIES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}</select>
             <select className="field !py-1.5" value={v.album_id} onChange={(e) => setV({ ...v, album_id: e.target.value })}>{albums.map((a) => <option key={a.id} value={a.id}>{a.year} — {a.title}</option>)}</select>
@@ -261,18 +267,18 @@ function MediaCard({ m, albums, onFeature, onRemove, onSaved, say }: {
 const toTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
 function AlbumsTab({ albums, reload, say }: { albums: Album[]; reload: () => void; say: (m: string) => void }) {
-  const blank = { year: String(new Date().getFullYear()), title: "", description: "", cover_url: "" };
+  const blank = { year: String(new Date().getFullYear()), title: "", title_te: "", description: "", description_te: "", cover_url: "" };
   const [f, setF] = useState(blank);
   const [editId, setEditId] = useState<string | null>(null);
 
   const reset = () => { setF(blank); setEditId(null); };
   const edit = (a: Album) => {
-    setEditId(a.id); setF({ year: String(a.year), title: a.title, description: a.description ?? "", cover_url: a.cover_url ?? "" }); toTop();
+    setEditId(a.id); setF({ year: String(a.year), title: a.title, title_te: a.title_te ?? "", description: a.description ?? "", description_te: a.description_te ?? "", cover_url: a.cover_url ?? "" }); toTop();
   };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const row = { year: Number(f.year), title: f.title.trim() || `Festival ${f.year}`, description: f.description.trim() || null, cover_url: f.cover_url || null };
+    const row = { year: Number(f.year), title: f.title.trim() || f.title_te.trim() || `Festival ${f.year}`, title_te: f.title_te.trim() || null, description: f.description.trim() || null, description_te: f.description_te.trim() || null, cover_url: f.cover_url || null };
     const { error } = editId ? await supabase!.from("albums").update(row).eq("id", editId) : await supabase!.from("albums").insert(row);
     if (error) return say(error.message.includes("duplicate") ? `An album for ${f.year} already exists` : error.message);
     say(editId ? "Album updated" : "Album created"); reset(); reload();
@@ -297,7 +303,11 @@ function AlbumsTab({ albums, reload, say }: { albums: Album[]; reload: () => voi
         <div className="grid gap-3 md:grid-cols-3">
           <input className="field" type="number" min={1990} max={2100} value={f.year} onChange={(e) => setF({ ...f, year: e.target.value })} required />
           <input className="field" placeholder="Title (e.g. Ganesh Utsav 2026)" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
-          <input className="field font-telugu" placeholder="Description" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+          <input className="field font-telugu" placeholder="శీర్షిక (తెలుగు)" value={f.title_te} onChange={(e) => setF({ ...f, title_te: e.target.value })} />
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <input className="field" placeholder="Description (English)" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+          <input className="field font-telugu" placeholder="వివరణ (తెలుగు)" value={f.description_te} onChange={(e) => setF({ ...f, description_te: e.target.value })} />
         </div>
         <CoverField value={f.cover_url} onChange={(cover_url) => setF({ ...f, cover_url })} say={say} />
         <div className="flex gap-2">
@@ -437,7 +447,8 @@ const localInput = (iso: string) => {
 function EventsTab({ say }: { say: (m: string) => void }) {
   const [list, setList] = useState<FestEvent[]>([]);
   const blank = { title: "", title_te: "", description: "", description_te: "", starts_at: "", location: "", deity: "both", category: "general", cover_url: "",
-    route_start: "", route_via: "", route_end: "", organizer: "", schedule: "", info: "" };
+    route_start: "", route_via: "", route_end: "", organizer: "", schedule: "", info: "",
+    location_te: "", route_start_te: "", route_via_te: "", route_end_te: "", organizer_te: "", info_te: "" };
   const [f, setF] = useState(blank);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -454,7 +465,9 @@ function EventsTab({ say }: { say: (m: string) => void }) {
       title: ev.title, title_te: ev.title_te ?? "", description: ev.description ?? "", description_te: ev.description_te ?? "",
       starts_at: localInput(ev.starts_at), location: ev.location ?? "", deity: ev.deity, category: ev.category ?? "general", cover_url: ev.cover_url ?? "",
       route_start: ev.route_start ?? "", route_via: ev.route_via ?? "", route_end: ev.route_end ?? "", organizer: ev.organizer ?? "",
-      schedule: (ev.schedule ?? []).map((r) => `${r.time} | ${r.label}`).join("\n"), info: (ev.info ?? []).join("\n"),
+      schedule: (ev.schedule ?? []).map((r) => (r.label_te ? `${r.time} | ${r.label} | ${r.label_te}` : `${r.time} | ${r.label}`)).join("\n"), info: (ev.info ?? []).join("\n"),
+      location_te: ev.location_te ?? "", route_start_te: ev.route_start_te ?? "", route_via_te: ev.route_via_te ?? "", route_end_te: ev.route_end_te ?? "",
+      organizer_te: ev.organizer_te ?? "", info_te: (ev.info_te ?? []).join("\n"),
     });
     toTop();
   };
@@ -462,8 +475,12 @@ function EventsTab({ say }: { say: (m: string) => void }) {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!f.title.trim() && !f.title_te.trim()) return say("Add a title in English or Telugu");
-    const schedule = lines(f.schedule).map((l) => { const [time, ...rest] = l.split("|"); return { time: time.trim(), label: rest.join("|").trim() }; }).filter((r) => r.time && r.label);
+    const schedule = lines(f.schedule).map((l) => {
+      const [time, label = "", label_te = ""] = l.split("|").map((x) => x.trim());
+      return { time, label: label || label_te, ...(label_te ? { label_te } : {}) };
+    }).filter((r) => r.time && r.label);
     const info = lines(f.info);
+    const infoTe = lines(f.info_te);
     const n = (v: string) => v.trim() || null;
     const row = {
       title: f.title.trim() || f.title_te.trim(), title_te: n(f.title_te),
@@ -471,6 +488,8 @@ function EventsTab({ say }: { say: (m: string) => void }) {
       starts_at: new Date(f.starts_at).toISOString(), location: n(f.location), deity: f.deity, category: f.category, cover_url: n(f.cover_url),
       route_start: n(f.route_start), route_via: n(f.route_via), route_end: n(f.route_end), organizer: n(f.organizer),
       schedule: schedule.length ? schedule : null, info: info.length ? info : null,
+      location_te: n(f.location_te), route_start_te: n(f.route_start_te), route_via_te: n(f.route_via_te), route_end_te: n(f.route_end_te),
+      organizer_te: n(f.organizer_te), info_te: infoTe.length ? infoTe : null,
     };
     const { error } = editId ? await supabase!.from("events").update(row).eq("id", editId) : await supabase!.from("events").insert(row);
     if (error) return say(error.message);
@@ -506,13 +525,21 @@ function EventsTab({ say }: { say: (m: string) => void }) {
           <input className="field" placeholder="Destination" value={f.route_end} onChange={(e) => setF({ ...f, route_end: e.target.value })} />
           <input className="field" placeholder="Organized by" value={f.organizer} onChange={(e) => setF({ ...f, organizer: e.target.value })} />
         </div>
+        <div className="grid gap-3 md:grid-cols-4">
+          <input className="field font-telugu" placeholder="ప్రదేశం (తెలుగు)" value={f.location_te} onChange={(e) => setF({ ...f, location_te: e.target.value })} />
+          <input className="field font-telugu" placeholder="ప్రారంభ స్థలం (తెలుగు)" value={f.route_start_te} onChange={(e) => setF({ ...f, route_start_te: e.target.value })} />
+          <input className="field font-telugu" placeholder="మీదుగా (తెలుగు)" value={f.route_via_te} onChange={(e) => setF({ ...f, route_via_te: e.target.value })} />
+          <input className="field font-telugu" placeholder="గమ్యం (తెలుగు)" value={f.route_end_te} onChange={(e) => setF({ ...f, route_end_te: e.target.value })} />
+        </div>
+        <input className="field font-telugu md:w-1/2" placeholder="నిర్వహణ (తెలుగు)" value={f.organizer_te} onChange={(e) => setF({ ...f, organizer_te: e.target.value })} />
         <p className="text-xs font-medium text-burgundy/70">Description (English)</p>
         <RichEditor placeholder="Description (English)" value={f.description} onChange={(description) => setF({ ...f, description })} />
         <p className="text-xs font-medium text-burgundy/70">వివరణ (తెలుగు)</p>
         <RichEditor placeholder="వివరణ (తెలుగు)" value={f.description_te} onChange={(description_te) => setF({ ...f, description_te })} />
-        <div className="grid gap-3 md:grid-cols-2">
-          <textarea className="field min-h-24" placeholder={"Schedule, one per line:\n6:30 PM | Bhaktha gathering"} value={f.schedule} onChange={(e) => setF({ ...f, schedule: e.target.value })} />
-          <textarea className="field min-h-24 font-telugu" placeholder={"Important information, one per line:\nAll are welcome"} value={f.info} onChange={(e) => setF({ ...f, info: e.target.value })} />
+        <div className="grid gap-3 md:grid-cols-3">
+          <textarea className="field min-h-24" placeholder={"Schedule, one per line (Telugu optional):\n6:30 PM | Bhaktha gathering | భక్తుల సమావేశం"} value={f.schedule} onChange={(e) => setF({ ...f, schedule: e.target.value })} />
+          <textarea className="field min-h-24" placeholder={"Important information (English), one per line:\nAll are welcome"} value={f.info} onChange={(e) => setF({ ...f, info: e.target.value })} />
+          <textarea className="field min-h-24 font-telugu" placeholder={"ముఖ్య సమాచారం (తెలుగు), ఒక్కో లైన్‌కు ఒకటి:\nఅందరికీ స్వాగతం"} value={f.info_te} onChange={(e) => setF({ ...f, info_te: e.target.value })} />
         </div>
         <CoverField value={f.cover_url} onChange={(cover_url) => setF({ ...f, cover_url })} say={say} />
         <div className="flex gap-2">
@@ -565,15 +592,21 @@ function CommentsTab({ say }: { say: (m: string) => void }) {
 }
 
 /* ---------------- Settings ---------------- */
-const SETTING_FIELDS: [string, string][] = [
-  ["festival_name", "Festival name"], ["tagline", "Tagline"], ["tagline_te", "Tagline (Telugu)"],
-  ["hero_script", "Script text on the banner"], ["countdown_label", "Countdown label"],
-  ["join_url", "Join Team link (WhatsApp group, form, etc.)"],
+// Each pair is shown side by side: English first, Telugu second. Visitors see the language they picked, falling back to the other.
+const SETTING_PAIRS: [[string, string], [string, string]][] = [
+  [["festival_name", "Festival name (English)"], ["festival_name_te", "ఉత్సవం పేరు (తెలుగు)"]],
+  [["tagline", "Tagline (English)"], ["tagline_line_te", "ట్యాగ్‌లైన్ (తెలుగు)"]],
+  [["headline", "Headline (English)"], ["tagline_te", "హెడ్‌లైన్ (తెలుగు)"]],
+  [["hero_script", "Script text on the banner (English)"], ["hero_script_te", "బ్యానర్ స్క్రిప్ట్ టెక్స్ట్ (తెలుగు)"]],
+  [["countdown_label", "Countdown label (English)"], ["countdown_label_te", "కౌంట్‌డౌన్ లేబుల్ (తెలుగు)"]],
 ];
+const SETTING_FIELDS: [string, string][] = [["join_url", "Join Team link (WhatsApp group, form, etc.)"]];
 
 const RICH_SETTINGS: [string, string][] = [
-  ["subtitle", "Subtitle under the tagline (home page)"],
-  ["motto_te", "Quote shown on update and event pages"],
+  ["subtitle", "Subtitle under the tagline, home page (English)"],
+  ["subtitle_te", "ట్యాగ్‌లైన్ కింద సబ్‌టైటిల్ (తెలుగు)"],
+  ["motto", "Quote shown on update and event pages (English)"],
+  ["motto_te", "అప్‌డేట్, ఈవెంట్ పేజీలలో కోట్ (తెలుగు)"],
 ];
 
 function SettingsTab({ say }: { say: (m: string) => void }) {
@@ -603,6 +636,15 @@ function SettingsTab({ say }: { say: (m: string) => void }) {
   return (
     <form onSubmit={save} className="royal-card space-y-3 p-4">
       <h2 className="font-display text-lg font-bold">Home page and banners</h2>
+      {SETTING_PAIRS.map((pair) => (
+        <div key={pair[0][0]} className="grid gap-3 md:grid-cols-2">
+          {pair.map(([k, label]) => (
+            <label key={k} className="block text-xs text-burgundy/70">{label}
+              <input className="field mt-1 font-telugu" value={s[k] ?? ""} onChange={(e) => setS({ ...s, [k]: e.target.value })} />
+            </label>
+          ))}
+        </div>
+      ))}
       {SETTING_FIELDS.map(([k, label]) => (
         <label key={k} className="block text-xs text-burgundy/70">{label}
           <input className="field mt-1 font-telugu" value={s[k] ?? ""} onChange={(e) => setS({ ...s, [k]: e.target.value })} />

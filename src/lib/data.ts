@@ -1,8 +1,10 @@
+import { unstable_cache } from "next/cache";
 import { supabase } from "./supabase";
+import { localeOf, type Lang } from "./i18n";
 import { demoAlbums, demoEvents, demoMedia, demoSettings, demoUpdates } from "./demo";
 import type { Album, FestEvent, FestUpdate, Media, Settings } from "./types";
 
-export async function getSettings(): Promise<Settings> {
+async function _getSettings(): Promise<Settings> {
   if (!supabase) return demoSettings;
   const { data } = await supabase.from("settings").select("key,value");
   const out: Settings = { ...demoSettings };
@@ -10,19 +12,19 @@ export async function getSettings(): Promise<Settings> {
   return out;
 }
 
-export async function getAlbums(): Promise<Album[]> {
+async function _getAlbums(): Promise<Album[]> {
   if (!supabase) return demoAlbums;
   const { data } = await supabase.from("albums").select("*").order("year", { ascending: false });
   return (data ?? []) as Album[];
 }
 
-export async function getAlbumByYear(year: number): Promise<Album | null> {
+async function _getAlbumByYear(year: number): Promise<Album | null> {
   if (!supabase) return demoAlbums.find((a) => a.year === year) ?? null;
   const { data } = await supabase.from("albums").select("*").eq("year", year).maybeSingle();
   return (data as Album) ?? null;
 }
 
-export async function getMedia(opts: { albumId?: string; featured?: boolean; limit?: number } = {}): Promise<Media[]> {
+async function _getMedia(opts: { albumId?: string; featured?: boolean; limit?: number } = {}): Promise<Media[]> {
   if (!supabase) return demoMedia;
   let q = supabase.from("media").select("*").order("created_at", { ascending: false });
   if (opts.albumId) q = q.eq("album_id", opts.albumId);
@@ -32,7 +34,7 @@ export async function getMedia(opts: { albumId?: string; featured?: boolean; lim
   return (data ?? []) as Media[];
 }
 
-export async function getUpdates(limit?: number): Promise<FestUpdate[]> {
+async function _getUpdates(limit?: number): Promise<FestUpdate[]> {
   if (!supabase) return limit ? demoUpdates.slice(0, limit) : demoUpdates;
   let q = supabase
     .from("updates")
@@ -44,35 +46,43 @@ export async function getUpdates(limit?: number): Promise<FestUpdate[]> {
   return (data ?? []) as FestUpdate[];
 }
 
-export async function getEvents(): Promise<FestEvent[]> {
+async function _getEvents(): Promise<FestEvent[]> {
   if (!supabase) return demoEvents;
   const { data } = await supabase.from("events").select("*").order("starts_at", { ascending: true });
   return (data ?? []) as FestEvent[];
 }
 
-export const deityLabel = (d: string) =>
-  d === "ganesha" ? "Lord Ganesha" : d === "durga" ? "Goddess Durgamata" : "All Deities";
-
-export const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
-export const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
-
-export const fmtWeekday = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { weekday: "long", timeZone: "Asia/Kolkata" });
+const tz = "Asia/Kolkata";
+export const fmtDate = (iso: string, lang: Lang = "en") =>
+  new Date(iso).toLocaleDateString(localeOf(lang), { day: "numeric", month: "short", year: "numeric", timeZone: tz });
+export const fmtTime = (iso: string, lang: Lang = "en") =>
+  new Date(iso).toLocaleTimeString(localeOf(lang), { hour: "numeric", minute: "2-digit", timeZone: tz });
+export const fmtWeekday = (iso: string, lang: Lang = "en") =>
+  new Date(iso).toLocaleDateString(localeOf(lang), { weekday: "long", timeZone: tz });
 export const dayNum = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", timeZone: "Asia/Kolkata" });
-export const monthShort = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { month: "short", timeZone: "Asia/Kolkata" }).toUpperCase();
+  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", timeZone: tz });
+export const monthShort = (iso: string, lang: Lang = "en") =>
+  new Date(iso).toLocaleDateString(localeOf(lang), { month: "short", timeZone: tz }).toUpperCase();
 
-export async function getEventById(id: string): Promise<FestEvent | null> {
+async function _getEventById(id: string): Promise<FestEvent | null> {
   if (!supabase) return demoEvents.find((e) => e.id === id) ?? null;
   const { data } = await supabase.from("events").select("*").eq("id", id).maybeSingle();
   return (data as FestEvent) ?? null;
 }
 
-export async function getUpdateById(id: string): Promise<FestUpdate | null> {
+async function _getUpdateById(id: string): Promise<FestUpdate | null> {
   if (!supabase) return demoUpdates.find((u) => u.id === id) ?? null;
   const { data } = await supabase.from("updates").select("*").eq("id", id).maybeSingle();
   return (data as FestUpdate) ?? null;
 }
+
+// Pages read the language cookie, so they render per request. Cache the database reads for 30s to keep that cheap.
+const c = <A extends unknown[], R>(fn: (...a: A) => Promise<R>, key: string) => unstable_cache(fn, [key], { revalidate: 30 });
+export const getSettings = c(_getSettings, "settings");
+export const getAlbums = c(_getAlbums, "albums");
+export const getAlbumByYear = c(_getAlbumByYear, "album-by-year");
+export const getMedia = c(_getMedia, "media");
+export const getUpdates = c(_getUpdates, "updates");
+export const getEvents = c(_getEvents, "events");
+export const getEventById = c(_getEventById, "event-by-id");
+export const getUpdateById = c(_getUpdateById, "update-by-id");
