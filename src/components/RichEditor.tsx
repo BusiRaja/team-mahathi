@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -147,6 +147,14 @@ export default function RichEditor({
     },
     onUpdate: ({ editor }) => onChange(editor.isEmpty ? "" : editor.getHTML()),
   });
+
+  // Keep the editor in step with the parent's value (loading a record to edit, async settings, form reset after save).
+  useEffect(() => {
+    if (!editor) return;
+    const incoming = toHtml(value);
+    const current = editor.isEmpty ? "" : editor.getHTML();
+    if (incoming !== current && !editor.isFocused) editor.commands.setContent(incoming, false);
+  }, [editor, value]);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gold/50 bg-white/80 focus-within:border-saffron focus-within:ring-2 focus-within:ring-saffron/30">

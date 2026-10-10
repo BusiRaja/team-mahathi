@@ -2,47 +2,29 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
-
   theme: {
     extend: {
       colors: {
-        black: {
-          DEFAULT: "#000000",
-          soft: "#111111",
-          light: "#1F1F1F",
-        },
-        white: {
-          DEFAULT: "#FFFFFF",
-          soft: "#FAFAFA",
-          muted: "#F5F5F5",
-        },
-        gray: {
-          DEFAULT: "#808080",
-          light: "#D9D9D9",
-          dark: "#333333",
-          subtle: "#EAEAEA",
-        },
+        burgundy: { DEFAULT: "#6B0F1A", dark: "#4A0A12", light: "#8E1B2B" },
+        saffron: { DEFAULT: "#FF9933", deep: "#E67E00" },
+        gold: { DEFAULT: "#D4AF37", light: "#F0D77B" },
+        ivory: { DEFAULT: "#FFF8E7", dark: "#F3E7C9" },
+        paper: "#FFFBF7",
+        blush: "#FCEBEB",
       },
-
       fontFamily: {
-        display: ["var(--font-cinzel)", "serif"],
-        serif: ["var(--font-cormorant)", "serif"],
-        sans: ["var(--font-poppins)", "system-ui", "sans-serif"],
+        display: ["var(--font-cinzel)", "var(--font-telugu)", "serif"],
+        script: ["var(--font-script)", "cursive"],
+        serif: ["var(--font-cormorant)", "var(--font-telugu)", "serif"],
+        sans: ["var(--font-poppins)", "var(--font-telugu)", "system-ui", "sans-serif"],
+        telugu: ["var(--font-telugu)", "var(--font-poppins)", "sans-serif"],
       },
-
       boxShadow: {
-        luxury: "0 10px 30px -10px rgba(0, 0, 0, 0.18)",
-        subtle: "0 4px 16px rgba(0, 0, 0, 0.06)",
-        elevated: "0 12px 40px rgba(0, 0, 0, 0.12)",
-      },
-
-      borderColor: {
-        DEFAULT: "#E5E5E5",
+        royal: "0 10px 30px -10px rgba(107,15,26,0.45)",
+        glow: "0 0 24px rgba(212,175,55,0.45)",
       },
     },
   },
-
   plugins: [],
 };
-
 export default config;
