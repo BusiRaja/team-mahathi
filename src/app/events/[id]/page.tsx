@@ -39,10 +39,8 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         <div className="wrap relative py-8 md:py-12">
           <nav aria-label="Breadcrumb" className="text-sm text-ivory/80"><Link href="/">{t("events.home")}</Link> › <Link href="/events">{t("events.title")}</Link> › <span>{t("events.detailsCrumb")}</span></nav>
           <span className="mt-4 inline-block rounded-full bg-burgundy px-3 py-1 text-xs ring-1 ring-gold/60">{new Date(e.starts_at) > new Date() ? t("events.upcomingBadge") : t("events.pastBadge")}</span>
-          <h1 className="mt-3 font-telugu text-4xl font-bold text-white md:text-6xl">{title}</h1>
-          {alt && <p className="mt-1 font-display text-lg tracking-[0.25em] text-gold-light">{alt.toUpperCase()}</p>}
-          <p className="mt-3 max-w-xl font-telugu text-ivory/90">{toText(L.motto)}</p>
-          <p className="script-text absolute bottom-6 right-6 hidden -rotate-6 text-3xl text-white md:block">{L.heroScript}</p>
+          <h1 className="mt-3 font-telugu text-4xl font-bold text-white md:text-6xl">{title}</h1> 
+          <p className="mt-3 max-w-xl font-telugu text-ivory/90">{toText(L.motto)}</p> 
         </div>
       </section>
 
