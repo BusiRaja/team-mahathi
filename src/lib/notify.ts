@@ -9,7 +9,6 @@ export interface NotifyResult {
   status: "sent" | "already-notified" | "not-found";
   recipients: number;
   emails: { sent: number; error?: string };
-  push: { sent: number; removed: number; error?: string };
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
