@@ -103,5 +103,5 @@ export async function notifyPublished(kind: "event" | "update", id: string, orig
   const msg = buildMessage(kind, row as FestEvent | FestUpdate);
   const url = origin + msg.path;
   const em = await sendEmails(emails, msg, url, new URL(origin).host).catch((e) => ({ sent: 0, error: String(e.message ?? e) }))
-  return { status: "sent", recipients: emails.length, emails: em, push };
+  return { status: "sent", recipients: emails.length, emails: em };
 }
