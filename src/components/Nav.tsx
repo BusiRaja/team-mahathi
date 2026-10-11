@@ -44,24 +44,26 @@ export default function Nav() {
     <>
       <header className="sticky top-0 z-40 border-b border-gold/30 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <div className="hidden shrink-0 items-center gap-2 xl:flex xl:w-52">
-            <span aria-hidden className="text-lg text-saffron-deep">📍</span>
+          <div className="hidden shrink-0 items-center gap-2 flex xl:w-52">
+            <span aria-hidden className="hidden md:block text-lg text-saffron-deep">📍</span>
             <div className="leading-tight">
               <div className="text-sm font-semibold">{t("nav.city")}</div>
               <div className="text-[11px] text-burgundy/60">{t("nav.state")}</div>
             </div>
             <LangSwitch />
           </div>
-          <div className="md:hidden"><Link href="/"><Logo size={44} /></Link></div>
+          <div className="md:hidden"><Link href="/"><Logo size={60} /></Link></div>
 
           <nav aria-label="Main" className="hidden items-center md:flex">
             {left.map(item)}
-            <Link href="/" className="relative z-10 mx-3 -mb-8 mt-4 block"><Logo size={76} /></Link>
+            <Link href="/" className="relative z-10 mx-3 -mb-8 mt-4 block"><Logo size={100} /></Link>
             {right.map(item)}
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-2 xl:w-52">
-            
+            <div className="md:hidden">
+              <LangSwitch />
+            </div>
             {!loading && !user && (
               <>
                 <Link href="/login" className="whitespace-nowrap rounded-full border border-burgundy/40 px-3 py-1.5 text-xs font-semibold text-burgundy hover:bg-burgundy/5 sm:px-4 sm:py-2 sm:text-sm">{t("auth.login")}</Link>
