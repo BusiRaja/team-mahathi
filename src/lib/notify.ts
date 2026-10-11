@@ -90,11 +90,11 @@ export async function notifyPublished(kind: "event" | "update", id: string, orig
   const { data: row } = await sb.from(table).select("*").eq("id", id).maybeSingle();
   const none = { sent: 0 };
   if (!row) return { status: "not-found", recipients: 0, emails: none };
-  if ((row as { notified_at?: string | null }).notified_at) return { status: "already-notified", recipients: 0, emails: none, push: { sent: 0, removed: 0 } };
+  if ((row as { notified_at?: string | null }).notified_at) return { status: "already-notified", recipients: 0, emails: none};
 
   // Claim the post first so two quick clicks can't announce it twice.
   const { data: claimed } = await sb.from(table).update({ notified_at: new Date().toISOString() }).eq("id", id).is("notified_at", null).select("id");
-  if (!claimed?.length) return { status: "already-notified", recipients: 0, emails: none, push: { sent: 0, removed: 0 } };
+  if (!claimed?.length) return { status: "already-notified", recipients: 0, emails: none };
 
   const [{ data: profiles }, { data: subs }] = await Promise.all([sb.from("profiles").select("email"), sb.from("subscribers").select("email")]);
   const emails = [...new Set([...(profiles ?? []), ...(subs ?? [])].map((r: { email: string | null }) => (r.email ?? "").trim().toLowerCase()).filter((e) => /^\S+@\S+\.\S+$/.test(e)))];
