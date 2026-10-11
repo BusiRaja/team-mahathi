@@ -89,7 +89,7 @@ export async function notifyPublished(kind: "event" | "update", id: string, orig
   const table = kind === "event" ? "events" : "updates";
   const { data: row } = await sb.from(table).select("*").eq("id", id).maybeSingle();
   const none = { sent: 0 };
-  if (!row) return { status: "not-found", recipients: 0, emails: none, push: { sent: 0, removed: 0 } };
+  if (!row) return { status: "not-found", recipients: 0, emails: none };
   if ((row as { notified_at?: string | null }).notified_at) return { status: "already-notified", recipients: 0, emails: none, push: { sent: 0, removed: 0 } };
 
   // Claim the post first so two quick clicks can't announce it twice.
