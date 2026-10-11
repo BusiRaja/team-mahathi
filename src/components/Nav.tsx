@@ -44,8 +44,8 @@ export default function Nav() {
     <>
       <header className="sticky top-0 z-40 border-b border-gold/30 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <div className="hidden shrink-0 items-center gap-2 flex xl:w-52">
-            <span aria-hidden className="hidden md:block text-lg text-saffron-deep">📍</span>
+          <div className="hidden shrink-0 items-center gap-2 md:flex xl:w-52">
+            <span aria-hidden className="text-lg text-saffron-deep">📍</span>
             <div className="leading-tight">
               <div className="text-sm font-semibold">{t("nav.city")}</div>
               <div className="text-[11px] text-burgundy/60">{t("nav.state")}</div>
