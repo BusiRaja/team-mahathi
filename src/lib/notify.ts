@@ -1,5 +1,4 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import webpush from "web-push";
 import { fmtDate, fmtTime } from "./data";
 import { eventDescription, eventTitle, eventWhere, updateBody, updateTitle } from "./i18n/content";
 import { toText } from "./text";
@@ -83,26 +82,6 @@ async function sendEmails(emails: string[], m: Msg, url: string, site: string) {
   return { sent, error };
 }
 
-async function sendPush(sb: SupabaseClient, m: Msg, origin: string) {
-  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
-  if (!pub || !priv) return { sent: 0, removed: 0, error: "Push not configured (set VAPID keys)" };
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:admin@example.com", pub, priv);
-  const { data } = await sb.from("push_subscriptions").select("id,endpoint,p256dh,auth,lang");
-  let sent = 0; const dead: string[] = [];
-  await Promise.all((data ?? []).map(async (s: { id: string; endpoint: string; p256dh: string; auth: string; lang: Lang }) => {
-    const l: Lang = s.lang === "te" ? "te" : "en";
-    const payload = JSON.stringify({
-      title: `${m.kind === "event" ? "🗓️" : "📣"} ${m.title[l] || m.title.en}`,
-      body: [m.when[l], m.body[l]].filter(Boolean).join("\n") || m.body.en,
-      url: origin + m.path,
-      tag: m.path,
-    });
-    try { await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload); sent++; }
-    catch (e) { const code = (e as { statusCode?: number }).statusCode; if (code === 404 || code === 410) dead.push(s.id); }
-  }));
-  if (dead.length) await sb.from("push_subscriptions").delete().in("id", dead);
-  return { sent, removed: dead.length };
-}
 
 /** Emails every registered user and subscriber, and pushes to every enabled device. Runs once per post. */
 export async function notifyPublished(kind: "event" | "update", id: string, origin: string): Promise<NotifyResult> {
@@ -125,7 +104,6 @@ export async function notifyPublished(kind: "event" | "update", id: string, orig
   const url = origin + msg.path;
   const [em, push] = await Promise.all([
     sendEmails(emails, msg, url, new URL(origin).host).catch((e) => ({ sent: 0, error: String(e.message ?? e) })),
-    sendPush(sb, msg, origin).catch((e) => ({ sent: 0, removed: 0, error: String(e.message ?? e) })),
   ]);
   return { status: "sent", recipients: emails.length, emails: em, push };
 }
