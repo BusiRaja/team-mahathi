@@ -21,7 +21,7 @@ export default function Countdown({ target, label }: { target: string; label: st
   return (
     <div className="mt-5" role="timer" aria-label={label}>
       <p className="mb-2 text-sm font-medium text-burgundy">{v?.done ? tr("count.live") : label}</p>
-      <div className="flex gap-2 max-md:justify-center">
+      <div className="flex gap-2">
         {cells.map(([k, n]) => (
           <div key={k} className="w-16 rounded-lg bg-burgundy py-2 text-center ring-1 ring-gold/60">
             <div className="font-display text-2xl font-bold tabular-nums text-gold-light">{String(n).padStart(2, "0")}</div>

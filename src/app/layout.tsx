@@ -3,7 +3,6 @@ import { Cinzel, Cormorant_Garamond, Poppins, Noto_Sans_Telugu, Dancing_Script }
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { getSettings } from "@/lib/data";
 import { getLang } from "@/lib/i18n/server";
 import { LangProvider } from "@/lib/i18n/client";
 import { translator } from "@/lib/i18n";
@@ -21,12 +20,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { themeColor: "#6B0F1A", width: "device-width", initialScale: 1 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, lang] = await Promise.all([getSettings(), getLang()]);
+  const lang = await getLang();
   return (
     <html lang={lang} className={`${cinzel.variable} ${cormorant.variable} ${poppins.variable} ${telugu.variable} ${script.variable}`}>
       <body>
         <LangProvider initial={lang}>
-          <Nav joinUrl={settings.join_url || "/updates"} />
+          <Nav />
           <main className="pb-24 md:pb-0">{children}</main>
           <Footer />
         </LangProvider>

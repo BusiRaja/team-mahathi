@@ -39,8 +39,10 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         <div className="wrap relative py-8 md:py-12">
           <nav aria-label="Breadcrumb" className="text-sm text-ivory/80"><Link href="/">{t("events.home")}</Link> › <Link href="/events">{t("events.title")}</Link> › <span>{t("events.detailsCrumb")}</span></nav>
           <span className="mt-4 inline-block rounded-full bg-burgundy px-3 py-1 text-xs ring-1 ring-gold/60">{new Date(e.starts_at) > new Date() ? t("events.upcomingBadge") : t("events.pastBadge")}</span>
-          <h1 className="mt-3 font-telugu text-4xl font-bold text-white md:text-6xl">{title}</h1> 
-          <p className="mt-3 max-w-xl font-telugu text-ivory/90">{toText(L.motto)}</p> 
+          <h1 className="mt-3 font-telugu text-4xl font-bold text-white md:text-6xl">{title}</h1>
+          {alt && <p className="mt-1 font-display text-lg tracking-[0.25em] text-gold-light">{alt.toUpperCase()}</p>}
+          <p className="mt-3 max-w-xl font-telugu text-ivory/90">{toText(L.motto)}</p>
+          <p className="script-text absolute bottom-6 right-6 hidden -rotate-6 text-3xl text-white md:block">{L.heroScript}</p>
         </div>
       </section>
 
@@ -104,7 +106,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           <div className="rounded-2xl bg-gradient-to-b from-burgundy to-burgundy-dark p-6 text-center text-ivory ring-1 ring-gold/60">
             <div aria-hidden className="text-5xl">🔱</div><p className="script-text text-2xl">{t("events.jai")}</p><p className="font-display text-xl font-bold">{t("events.bhavani")}</p><p className="mt-2 text-[10px] tracking-widest text-gold-light">{t("events.motto")}</p>
           </div>
-          <QuickLinks items={[{ href: "/events", label: "quick.viewOnCalendar", icon: "🗓️" }, { href: maps, label: "quick.routeMap", icon: "🗺️" }, { href: "/gallery", label: "quick.photos", icon: "🖼️" }, { href: "/gallery", label: "quick.videos", icon: "▶" }, { href: "/updates", label: "quick.joinTeam", icon: "👥", signedOutOnly: true }]} />
+          <QuickLinks items={[{ href: "/events", label: "quick.viewOnCalendar", icon: "🗓️" }, { href: maps, label: "quick.routeMap", icon: "🗺️" }, { href: "/gallery", label: "quick.photos", icon: "🖼️" }, { href: "/gallery", label: "quick.videos", icon: "▶" }, { href: "/signup", label: "quick.joinTeam", icon: "👥", signedOutOnly: true }]} />
           <div className="royal-card p-4">
             <div className="flex items-end justify-between"><h2 className="font-display text-lg font-bold text-burgundy">{t("events.related")}</h2><Link href="/events" className="text-sm text-burgundy">{t("updates.viewAll")}</Link></div>
             <ul className="mt-3 space-y-3">{related.map((x) => (

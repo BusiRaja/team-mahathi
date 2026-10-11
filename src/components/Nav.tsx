@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
-import { useSignedIn } from "@/lib/useSession";
+import { useAuth, displayName } from "@/lib/useSession";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import { useLang } from "@/lib/i18n/client";
 import LangSwitch from "./LangSwitch";
+import PushToggle from "./PushToggle";
 import type { Key } from "@/lib/i18n";
 
 const left = [
@@ -16,13 +19,14 @@ const left = [
 const right = [
   { href: "/updates", key: "nav.updates" as Key, icon: "📣" },
   { href: "/events", key: "nav.events" as Key, icon: "🗓️" },
-  { href: "/admin", key: "nav.admin" as Key, icon: "🔐" },
 ];
 
-export default function Nav({ joinUrl }: { joinUrl: string }) {
+export default function Nav() {
   const path = usePathname();
   const { t } = useLang();
-  const signedIn = useSignedIn();
+  const { user, isAdmin, loading } = useAuth();
+  const router = useRouter();
+  const logout = async () => { await supabase?.auth.signOut(); router.replace("/"); router.refresh(); };
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
   const item = (l: { href: string; key: Key }) => (
     <Link
@@ -46,21 +50,33 @@ export default function Nav({ joinUrl }: { joinUrl: string }) {
               <div className="text-sm font-semibold">{t("nav.city")}</div>
               <div className="text-[11px] text-burgundy/60">{t("nav.state")}</div>
             </div>
+            <LangSwitch />
           </div>
           <div className="md:hidden"><Link href="/"><Logo size={44} /></Link></div>
 
           <nav aria-label="Main" className="hidden items-center md:flex">
             {left.map(item)}
-            <Link href="/" className="relative z-10 mx-3 -mb-8 mt-4 block"><Logo size={100} /></Link>
+            <Link href="/" className="relative z-10 mx-3 -mb-8 mt-4 block"><Logo size={76} /></Link>
             {right.map(item)}
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-2 xl:w-52">
-            <LangSwitch />
-            {signedIn === false && (
-              <Link href={joinUrl} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-burgundy px-3 py-1.5 text-xs font-semibold text-white shadow-royal hover:bg-burgundy-light sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
-                <span aria-hidden>👥</span><span className="md:sr-only lg:not-sr-only">{t("nav.joinTeam")}</span>
-              </Link>
+            
+            {!loading && !user && (
+              <>
+                <Link href="/login" className="whitespace-nowrap rounded-full border border-burgundy/40 px-3 py-1.5 text-xs font-semibold text-burgundy hover:bg-burgundy/5 sm:px-4 sm:py-2 sm:text-sm">{t("auth.login")}</Link>
+                <Link href="/signup" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-burgundy px-3 py-1.5 text-xs font-semibold text-white shadow-royal hover:bg-burgundy-light sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+                  <span aria-hidden className="hidden lg:inline">👥</span><span>{t("nav.joinTeam")}</span>
+                </Link>
+              </>
+            )}
+            {!loading && user && (
+              <>
+                {isAdmin && <Link href="/admin" className="whitespace-nowrap rounded-full border border-gold/60 px-3 py-1.5 text-xs font-semibold text-burgundy hover:bg-gold/10 sm:text-sm">{t("auth.adminPanel")}</Link>}
+                <span className="hidden max-w-[8rem] truncate text-sm font-medium text-burgundy lg:inline">{t("auth.hello", { name: displayName(user) })}</span>
+                <PushToggle />
+                <button onClick={logout} className="whitespace-nowrap rounded-full border border-burgundy/40 px-3 py-1.5 text-xs font-semibold text-burgundy hover:bg-burgundy/5 sm:px-4 sm:py-2 sm:text-sm">{t("auth.logout")}</button>
+              </>
             )}
           </div>
         </div>

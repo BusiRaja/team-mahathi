@@ -13,7 +13,7 @@ Theme: royal burgundy, saffron, gold, ivory with dedicated Lord Ganesha and Godd
 
 ## Setup
 1. Create a Supabase project.
-2. SQL Editor → run, in order: `supabase/schema.sql`, `supabase/migration-002-mockup-fields.sql` (route/Telugu/engagement fields, subscribers), `supabase/migration-003-comments.sql` (moderated comments), `supabase/migration-004-multilanguage.sql` (Telugu versions of every content field).
+2. SQL Editor → run, in order: `supabase/schema.sql`, `supabase/migration-002-mockup-fields.sql` (route/Telugu/engagement fields, subscribers), `supabase/migration-003-comments.sql` (moderated comments), `supabase/migration-004-multilanguage.sql` (Telugu versions of every content field), `supabase/migration-005-accounts.sql` (visitor accounts, per-user likes, signed-in comments).
 3. Auth → Users → add an admin user (email + password), then run:
    ```sql
    insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';
@@ -21,6 +21,12 @@ Theme: royal burgundy, saffron, gold, ivory with dedicated Lord Ganesha and Godd
 4. Cloudinary Dashboard → copy Cloud name, API Key, API Secret.
 5. Copy `.env.example` to `.env.local` and fill in the Supabase and Cloudinary values.
 6. `npm install && npm run dev`
+
+## Accounts
+- **Join Team** goes to `/signup` (email, phone, password, optional name). **Login** replaces the Admin link in the header; admins who log in at `/login` land on `/admin`, and an Admin button shows in the header only for admins.
+- Phone is saved on the visitor's profile (no SMS check). Supabase → Auth → Providers → Email must be on; if "Confirm email" is on, visitors confirm by email before logging in. Admin → Members lists sign-ups.
+- **Likes** are one per signed-in user and can be undone; logged-out visitors are sent to login. **Comments** need a login and use the account name. Views still count without login.
+- The old "Join Team link" setting (e.g. a WhatsApp group) is now shown as a button after sign-up.
 
 ## Language, likes, views and comments
 - **Language switch:** the header has an EN | తెలుగు toggle. The choice is saved in a `lang` cookie (first visit follows the browser language), and every page, including server-rendered content, is shown in that language. UI text lives in `src/lib/i18n/en.ts` and `te.ts`; add a key to both. Dates, weekdays and months follow the language too.

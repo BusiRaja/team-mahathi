@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/useSession";
 import { supabase } from "@/lib/supabase";
 import { compact } from "@/lib/updates-meta";
 import { useLang } from "@/lib/i18n/client";
 
-const bump = (id: string, field: "views" | "likes") => supabase?.rpc("bump_update", { p_id: id, p_field: field });
+const bumpView = (id: string) => supabase?.rpc("bump_update", { p_id: id, p_field: "views" });
 
-/** Counts a view once per browser session and lets a visitor like once. Also renders share buttons. */
+/** Counts a view once per browser session. Likes belong to the signed-in user (one per update, can be undone). Also renders share buttons. */
 export default function Engage({ id, views = 0, likes = 0, comments = 0, title }: { id: string; views?: number; likes?: number; comments?: number; title: string }) {
   const { t } = useLang();
+  const { user } = useAuth();
+  const router = useRouter();
+  const path = usePathname();
+  const uid = user?.id;
   const [v, setV] = useState(views);
   const [l, setL] = useState(likes);
   const [liked, setLiked] = useState(false);
@@ -17,15 +23,26 @@ export default function Engage({ id, views = 0, likes = 0, comments = 0, title }
 
   useEffect(() => {
     try {
-      setLiked(localStorage.getItem(`liked:${id}`) === "1");
-      if (!sessionStorage.getItem(`seen:${id}`)) { sessionStorage.setItem(`seen:${id}`, "1"); bump(id, "views"); setV((x) => x + 1); }
+      if (!sessionStorage.getItem(`seen:${id}`)) { sessionStorage.setItem(`seen:${id}`, "1"); bumpView(id); setV((x) => x + 1); }
     } catch { /* storage blocked: skip counting */ }
   }, [id]);
 
-  function like() {
-    if (liked) return;
-    setLiked(true); setL((x) => x + 1); bump(id, "likes");
-    try { localStorage.setItem(`liked:${id}`, "1"); } catch {}
+  // Whether the signed-in user already liked this update.
+  useEffect(() => {
+    if (!supabase || !uid) { setLiked(false); return; }
+    let live = true;
+    supabase.from("update_likes").select("update_id").eq("update_id", id).eq("user_id", uid).maybeSingle().then(({ data }) => { if (live) setLiked(Boolean(data)); });
+    return () => { live = false; };
+  }, [id, uid]);
+
+  async function like() {
+    if (!user || !supabase) { router.push(`/login?next=${encodeURIComponent(path)}`); return; }
+    const was = liked;
+    setLiked(!was); setL((x) => Math.max(0, x + (was ? -1 : 1))); // optimistic
+    const { error } = was
+      ? await supabase.from("update_likes").delete().eq("update_id", id).eq("user_id", user.id)
+      : await supabase.from("update_likes").insert({ update_id: id, user_id: user.id });
+    if (error && error.code !== "23505") { setLiked(was); setL((x) => Math.max(0, x + (was ? 1 : -1))); }
   }
   const url = () => (typeof window === "undefined" ? "" : window.location.href);
   const enc = encodeURIComponent;
@@ -35,7 +52,7 @@ export default function Engage({ id, views = 0, likes = 0, comments = 0, title }
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gold/20 pt-4 text-sm">
       <div className="flex items-center gap-5 text-burgundy">
         <span>👁 {compact(v)} {t("engage.views")}</span>
-        <button onClick={like} aria-pressed={liked} className={`font-medium ${liked ? "text-burgundy" : "text-burgundy/70"}`}>{liked ? "♥" : "♡"} {compact(l)} {t("engage.likes")}</button>
+        <button onClick={like} aria-pressed={liked} title={user ? undefined : t("engage.loginToLike")} className={`font-medium ${liked ? "text-burgundy" : "text-burgundy/70"}`}>{liked ? "♥" : "♡"} {compact(l)} {t("engage.likes")}</button>
         <a href="#comments" className="text-burgundy/70">💬 {compact(comments)} {t("engage.comments")}</a>
       </div>
       <div className="flex items-center gap-2">

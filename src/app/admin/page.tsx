@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { isConfigured, supabase } from "@/lib/supabase";
 import RichEditor from "@/components/RichEditor";
@@ -11,7 +12,7 @@ import {
   type Album, type Comment, type FestEvent, type FestUpdate, type Media, type Settings,
 } from "@/lib/types";
 
-type Tab = "media" | "albums" | "updates" | "events" | "comments" | "settings";
+type Tab = "media" | "albums" | "updates" | "events" | "comments" | "members" | "settings";
 
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -40,7 +41,7 @@ export default function AdminPage() {
     );
   }
   if (!ready) return <p className="p-8 text-center">Loading…</p>;
-  if (!session) return <Login />;
+  if (!session) return <GoLogin />;
   if (isAdmin === null) return <p className="p-8 text-center">Checking access…</p>;
   if (!isAdmin) {
     return (
@@ -52,6 +53,12 @@ export default function AdminPage() {
     );
   }
   return <Dashboard email={session.user.email ?? ""} />;
+}
+
+function GoLogin() {
+  const router = useRouter();
+  useEffect(() => { router.replace("/login?next=/admin"); }, [router]);
+  return <p className="p-8 text-center">Redirecting to login…</p>;
 }
 
 function Login() {
@@ -92,7 +99,7 @@ function Dashboard({ email }: { email: string }) {
 
   const say = (m: string) => { setToast(m); setTimeout(() => setToast(""), 3000); };
 
-  const tabs: [Tab, string][] = [["media", "Media"], ["albums", "Albums"], ["updates", "Updates"], ["events", "Events"], ["comments", "Comments"], ["settings", "Settings"]];
+  const tabs: [Tab, string][] = [["media", "Media"], ["albums", "Albums"], ["updates", "Updates"], ["events", "Events"], ["comments", "Comments"], ["members", "Members"], ["settings", "Settings"]];
 
   return (
     <div>
@@ -113,6 +120,7 @@ function Dashboard({ email }: { email: string }) {
       {tab === "updates" && <UpdatesTab say={say} />}
       {tab === "events" && <EventsTab say={say} />}
       {tab === "comments" && <CommentsTab say={say} />}
+      {tab === "members" && <MembersTab />}
       {tab === "settings" && <SettingsTab say={say} />}
       {toast && <div className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-full bg-burgundy px-4 py-2 text-center text-sm text-gold-light shadow-royal md:bottom-6">{toast}</div>}
     </div>
@@ -264,6 +272,22 @@ function MediaCard({ m, albums, onFeature, onRemove, onSaved, say }: {
 }
 
 /* ---------------- Albums ---------------- */
+/** Announces a new post by email + push. Returns a short summary for the toast. */
+async function announce(kind: "event" | "update", id: string): Promise<string> {
+  const { data } = await supabase!.auth.getSession();
+  const res = await fetch("/api/notify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token ?? ""}` },
+    body: JSON.stringify({ kind, id }),
+  });
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) return `Saved, but notifying failed: ${r.error ?? res.status}`;
+  if (r.status === "already-notified") return "Saved (members were already notified)";
+  const bits = [`${r.emails.sent} email(s)`, `${r.push.sent} push`];
+  const warn = [r.emails.error, r.push.error].filter(Boolean).join(" · ");
+  return `Saved. Notified: ${bits.join(", ")}${warn ? ` — ${warn}` : ""}`;
+}
+
 const toTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
 function AlbumsTab({ albums, reload, say }: { albums: Album[]; reload: () => void; say: (m: string) => void }) {
@@ -359,6 +383,7 @@ function UpdatesTab({ say }: { say: (m: string) => void }) {
   const [events, setEvents] = useState<FestEvent[]>([]);
   const blank = { kind: "general", deity: "both", title: "", title_te: "", body: "", body_te: "", cover_url: "", event_id: "", pinned: false };
   const [f, setF] = useState(blank);
+  const [notify, setNotify] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -385,9 +410,11 @@ function UpdatesTab({ say }: { say: (m: string) => void }) {
       body: isEmptyRich(f.body) ? null : f.body, body_te: isEmptyRich(f.body_te) ? null : f.body_te,
       cover_url: f.cover_url || null, event_id: f.event_id || null,
     };
-    const { error } = editId ? await supabase!.from("updates").update(row).eq("id", editId) : await supabase!.from("updates").insert(row);
-    if (error) return say(error.message);
-    say(editId ? "Update saved" : "Published"); setF({ ...blank, kind: f.kind, deity: f.deity }); setEditId(null); load();
+    const res = editId ? await supabase!.from("updates").update(row).eq("id", editId) : await supabase!.from("updates").insert(row).select("id").single();
+    if (res.error) return say(res.error.message);
+    if (editId) say("Update saved");
+    else if (notify && res.data) { say("Published. Notifying members…"); say(await announce("update", (res.data as { id: string }).id)); }
+    else say("Published"); setF({ ...blank, kind: f.kind, deity: f.deity }); setEditId(null); load();
   };
   const remove = async (id: string) => {
     if (!confirm("Delete this update and its comments?")) return;
@@ -419,6 +446,7 @@ function UpdatesTab({ say }: { say: (m: string) => void }) {
         <CoverField value={f.cover_url} onChange={(cover_url) => setF({ ...f, cover_url })} say={say} />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.pinned} onChange={(e) => setF({ ...f, pinned: e.target.checked })} /> Pin to top</label>
         <div className="flex gap-2">
+          {!editId && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Notify members (email + push)</label>}
           <button className="btn-royal">{editId ? "Save changes" : "Publish"}</button>
           {editId && <button type="button" className="btn-ghost" onClick={reset}>Cancel</button>}
         </div>
@@ -450,6 +478,7 @@ function EventsTab({ say }: { say: (m: string) => void }) {
     route_start: "", route_via: "", route_end: "", organizer: "", schedule: "", info: "",
     location_te: "", route_start_te: "", route_via_te: "", route_end_te: "", organizer_te: "", info_te: "" };
   const [f, setF] = useState(blank);
+  const [notify, setNotify] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -491,9 +520,11 @@ function EventsTab({ say }: { say: (m: string) => void }) {
       location_te: n(f.location_te), route_start_te: n(f.route_start_te), route_via_te: n(f.route_via_te), route_end_te: n(f.route_end_te),
       organizer_te: n(f.organizer_te), info_te: infoTe.length ? infoTe : null,
     };
-    const { error } = editId ? await supabase!.from("events").update(row).eq("id", editId) : await supabase!.from("events").insert(row);
-    if (error) return say(error.message);
-    say(editId ? "Event saved" : "Event added"); reset(); load();
+    const res = editId ? await supabase!.from("events").update(row).eq("id", editId) : await supabase!.from("events").insert(row).select("id").single();
+    if (res.error) return say(res.error.message);
+    if (editId) say("Event saved");
+    else if (notify && res.data) { say("Event added. Notifying members…"); say(await announce("event", (res.data as { id: string }).id)); }
+    else say("Event added"); reset(); load();
   };
   const remove = async (id: string) => {
     if (!confirm("Delete this event?")) return;
@@ -543,6 +574,7 @@ function EventsTab({ say }: { say: (m: string) => void }) {
         </div>
         <CoverField value={f.cover_url} onChange={(cover_url) => setF({ ...f, cover_url })} say={say} />
         <div className="flex gap-2">
+          {!editId && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Notify members (email + push)</label>}
           <button className="btn-royal">{editId ? "Save changes" : "Add event"}</button>
           {editId && <button type="button" className="btn-ghost" onClick={reset}>Cancel</button>}
         </div>
@@ -591,6 +623,28 @@ function CommentsTab({ say }: { say: (m: string) => void }) {
   );
 }
 
+/* ---------------- Members (sign-ups) ---------------- */
+function MembersTab() {
+  const [list, setList] = useState<{ id: string; email: string | null; phone: string | null; full_name: string | null; created_at: string }[]>([]);
+  useEffect(() => {
+    supabase!.from("profiles").select("*").order("created_at", { ascending: false }).limit(500).then(({ data }) => setList((data ?? []) as typeof list));
+  }, []);
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-burgundy/70">{list.length} member(s) signed up</p>
+      <ul className="space-y-2">
+        {list.map((m) => (
+          <li key={m.id} className="royal-card flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+            <span className="min-w-0 truncate"><b className="font-telugu">{m.full_name || m.email?.split("@")[0]}</b> <span className="text-burgundy/70">· {m.email}</span></span>
+            <span className="flex gap-3 text-burgundy/70"><a href={`tel:${m.phone ?? ""}`}>{m.phone ?? "-"}</a><span>{new Date(m.created_at).toLocaleDateString("en-IN")}</span></span>
+          </li>
+        ))}
+        {!list.length && <li className="royal-card p-6 text-center">No members yet. Run migration-005 if this stays empty after sign-ups.</li>}
+      </ul>
+    </div>
+  );
+}
+
 /* ---------------- Settings ---------------- */
 // Each pair is shown side by side: English first, Telugu second. Visitors see the language they picked, falling back to the other.
 const SETTING_PAIRS: [[string, string], [string, string]][] = [
@@ -600,7 +654,7 @@ const SETTING_PAIRS: [[string, string], [string, string]][] = [
   [["hero_script", "Script text on the banner (English)"], ["hero_script_te", "బ్యానర్ స్క్రిప్ట్ టెక్స్ట్ (తెలుగు)"]],
   [["countdown_label", "Countdown label (English)"], ["countdown_label_te", "కౌంట్‌డౌన్ లేబుల్ (తెలుగు)"]],
 ];
-const SETTING_FIELDS: [string, string][] = [["join_url", "Join Team link (WhatsApp group, form, etc.)"]];
+const SETTING_FIELDS: [string, string][] = [["join_url", "Group link shown after sign-up (WhatsApp group, etc.)"]];
 
 const RICH_SETTINGS: [string, string][] = [
   ["subtitle", "Subtitle under the tagline, home page (English)"],

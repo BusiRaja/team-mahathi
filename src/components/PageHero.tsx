@@ -16,6 +16,11 @@ export default function PageHero({
           {sub && <p className="mt-3 font-telugu text-sm text-ivory/90 md:text-lg">{sub}</p>}
           {children}
         </div>
+        {script && (
+          <p className="script-text hidden -rotate-6 text-right text-2xl leading-tight text-white/95 md:block md:text-3xl">
+            {script.map((l) => <span key={l} className="block">{l}</span>)}
+          </p>
+        )}
       </div>
     </section>
   );
