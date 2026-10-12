@@ -102,7 +102,7 @@ function Dashboard({ email }: { email: string }) {
   const tabs: [Tab, string][] = [["media", "Media"], ["albums", "Albums"], ["updates", "Updates"], ["events", "Events"], ["comments", "Comments"], ["members", "Members"], ["settings", "Settings"]];
 
   return (
-    <div>
+    <div className="wrap mt-8 max-w-5xl">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="section-title">Admin Panel</h1>

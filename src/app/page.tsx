@@ -29,7 +29,6 @@ export default async function Home() {
 
   return (
     <div>
-      {/* Hero: welcome text on the left, deity image on the right */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#FFF1DD] via-paper to-[#FBE3D3]">
         <div className="wrap grid items-center gap-6 pb-24 pt-10 md:grid-cols-2 md:pt-14">
           <div className="text-center md:text-left">
