@@ -92,7 +92,7 @@ function Dashboard({ email }: { email: string }) {
   const [toast, setToast] = useState("");
 
   const loadAlbums = useCallback(async () => {
-    const { data } = await supabase!.from("albums").select("*").order("year", { ascending: false });
+    const { data } = await supabase!.from("albums").select("*").order("year", { ascending: false }).order("created_at", { ascending: true });
     setAlbums((data ?? []) as Album[]);
   }, []);
   useEffect(() => { loadAlbums(); }, [loadAlbums]);
@@ -283,7 +283,7 @@ async function announce(kind: "event" | "update", id: string): Promise<string> {
   const r = await res.json().catch(() => ({}));
   if (!res.ok) return `Saved, but notifying failed: ${r.error ?? res.status}`;
   if (r.status === "already-notified") return "Saved (members were already notified)";
-  const bits = [`${r.emails.sent} email(s)`, `${r.push.sent} push`];
+  const bits = [`${r.emails.sent} email(s)`];
   const warn = [r.emails.error, r.push.error].filter(Boolean).join(" · ");
   return `Saved. Notified: ${bits.join(", ")}${warn ? ` — ${warn}` : ""}`;
 }
@@ -304,11 +304,11 @@ function AlbumsTab({ albums, reload, say }: { albums: Album[]; reload: () => voi
     e.preventDefault();
     const row = { year: Number(f.year), title: f.title.trim() || f.title_te.trim() || `Festival ${f.year}`, title_te: f.title_te.trim() || null, description: f.description.trim() || null, description_te: f.description_te.trim() || null, cover_url: f.cover_url || null };
     const { error } = editId ? await supabase!.from("albums").update(row).eq("id", editId) : await supabase!.from("albums").insert(row);
-    if (error) return say(error.message.includes("duplicate") ? `An album for ${f.year} already exists` : error.message);
+    if (error) return say(error.message.includes("albums_year_key") || error.message.includes("duplicate") ? "Run supabase/migration-007-multiple-albums.sql to allow several albums per year" : error.message);
     say(editId ? "Album updated" : "Album created"); reset(); reload();
   };
   const remove = async (a: Album) => {
-    if (!confirm(`Delete album ${a.year} and all its media records?`)) return;
+    if (!confirm(`Delete album "${a.title}" (${a.year}) and all its media records?`)) return;
     const { data } = await supabase!.from("media").select("storage_path,type").eq("album_id", a.id);
     await Promise.all(
       (data ?? [])
@@ -323,7 +323,8 @@ function AlbumsTab({ albums, reload, say }: { albums: Album[]; reload: () => voi
   return (
     <div className="space-y-6">
       <form onSubmit={save} className="royal-card space-y-3 p-4">
-        <h2 className="font-display text-lg font-bold">{editId ? "Edit album" : "New year album"}</h2>
+        <h2 className="font-display text-lg font-bold">{editId ? "Edit album" : "New album"}</h2>
+        <p className="text-xs text-burgundy/70">You can create several albums under the same year, for example one for Ganesh Chaturthi and one for Navaratri. Give each its own title.</p>
         <div className="grid gap-3 md:grid-cols-3">
           <input className="field" type="number" min={1990} max={2100} value={f.year} onChange={(e) => setF({ ...f, year: e.target.value })} required />
           <input className="field" placeholder="Title (e.g. Ganesh Utsav 2026)" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />

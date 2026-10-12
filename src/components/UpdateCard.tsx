@@ -24,7 +24,7 @@ export default function UpdateCard({ u, list = false }: { u: FestUpdate; list?: 
       <div className="flex flex-1 flex-col p-3.5">
         <p className="text-xs text-burgundy/60"><span aria-hidden>📍 </span>{fmtDate(u.created_at, lang)}</p>
         <h3 className="mt-1 font-telugu text-base font-bold leading-snug text-burgundy">{updateTitle(u, lang)}</h3>
-        {body && <p className="mt-1 line-clamp-2 font-telugu text-sm text-burgundy-dark/70">{body}</p>}
+        {body && <p className="mt-1 line-clamp-5 font-telugu text-sm text-burgundy-dark/70 leading-[23px]">{body}</p>}
         <div className="mt-auto flex items-center justify-between pt-3 text-xs text-burgundy/70">
           <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full border border-burgundy/50 text-burgundy">→</span>
           <span className="flex gap-3"><span>👁 {compact(u.views)}</span><span>💬 {compact(u.comments_count)}</span><span className="text-burgundy">♥ {compact(u.likes)}</span></span>

@@ -14,13 +14,20 @@ async function _getSettings(): Promise<Settings> {
 
 async function _getAlbums(): Promise<Album[]> {
   if (!supabase) return demoAlbums;
-  const { data } = await supabase.from("albums").select("*").order("year", { ascending: false });
+  const { data } = await supabase.from("albums").select("*").order("year", { ascending: false }).order("created_at", { ascending: true });
   return (data ?? []) as Album[];
 }
 
-async function _getAlbumByYear(year: number): Promise<Album | null> {
-  if (!supabase) return demoAlbums.find((a) => a.year === year) ?? null;
-  const { data } = await supabase.from("albums").select("*").eq("year", year).maybeSingle();
+/** All albums of a year, oldest first. */
+async function _getAlbumsByYear(year: number): Promise<Album[]> {
+  if (!supabase) return demoAlbums.filter((a) => a.year === year);
+  const { data } = await supabase.from("albums").select("*").eq("year", year).order("created_at", { ascending: true });
+  return (data ?? []) as Album[];
+}
+
+async function _getAlbumById(id: string): Promise<Album | null> {
+  if (!supabase) return demoAlbums.find((a) => a.id === id) ?? null;
+  const { data } = await supabase.from("albums").select("*").eq("id", id).maybeSingle();
   return (data as Album) ?? null;
 }
 
@@ -80,7 +87,8 @@ async function _getUpdateById(id: string): Promise<FestUpdate | null> {
 const c = <A extends unknown[], R>(fn: (...a: A) => Promise<R>, key: string) => unstable_cache(fn, [key], { revalidate: 30 });
 export const getSettings = c(_getSettings, "settings");
 export const getAlbums = c(_getAlbums, "albums");
-export const getAlbumByYear = c(_getAlbumByYear, "album-by-year");
+export const getAlbumsByYear = c(_getAlbumsByYear, "albums-by-year");
+export const getAlbumById = c(_getAlbumById, "album-by-id");
 export const getMedia = c(_getMedia, "media");
 export const getUpdates = c(_getUpdates, "updates");
 export const getEvents = c(_getEvents, "events");

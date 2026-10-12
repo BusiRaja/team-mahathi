@@ -23,6 +23,8 @@ export default async function Home() {
   const target = settings.countdown_target || upcoming[0]?.starts_at || "";
   const nextEvent = upcoming[0];
   const nextDesc = nextEvent ? toText(eventDescription(nextEvent, lang)) : "";
+  // One tile per year (a year can hold several albums); the cover comes from the first album that has a photo.
+  const years = [...new Set(albums.map((a) => a.year))].slice(0, 4);
   const coverFor = (albumId: string) => media.find((m) => m.album_id === albumId && m.type === "photo")?.url;
 
   return (
@@ -60,7 +62,7 @@ export default async function Home() {
           </Link>
         ))}
       </section>
-
+ 
       <div className="wrap mt-10 grid gap-8 lg:grid-cols-3">
         <section>
           <div className="mb-3 flex items-end justify-between"><h2 className="section-title">{t("home.latest")}</h2><Link href="/updates" className="text-sm font-medium text-burgundy">{t("home.seeAll")}</Link></div>
@@ -79,10 +81,11 @@ export default async function Home() {
                   <div className="grid h-16 w-14 shrink-0 place-items-center rounded-lg border border-gold/50 text-center"><div><div className="font-display text-2xl font-bold leading-none text-burgundy">{dayNum(nextEvent.starts_at)}</div><div className="text-[10px] tracking-wider">{monthShort(nextEvent.starts_at, lang)}</div></div></div>
                   <div className="min-w-0 text-sm">
                     <h3 className="font-telugu text-lg font-bold leading-snug text-burgundy">{eventTitle(nextEvent, lang)}</h3>
-                    <p className="mt-1 text-burgundy/70">{fmtDate(nextEvent.starts_at, lang)} · {fmtTime(nextEvent.starts_at, lang)} 📍 {eventWhere(nextEvent, lang)}</p>
-                    
+                    <p className="mt-1 text-burgundy/70">{fmtDate(nextEvent.starts_at, lang)} · {fmtTime(nextEvent.starts_at, lang)}</p>
+                    <p className="text-burgundy/70">📍 {eventWhere(nextEvent, lang)}</p>
                   </div>
-                </div> 
+                </div>
+                {nextDesc && <p className="mt-3 line-clamp-2 font-telugu text-sm leading-relaxed text-burgundy-dark/80">{nextDesc}</p>}
                 <span className="btn-royal mt-4 w-full">{t("home.viewEventDetails")}</span>
               </div>
             </Link>
@@ -92,13 +95,17 @@ export default async function Home() {
         <section>
           <div className="mb-3 flex items-end justify-between"><h2 className="section-title">{t("home.byYear")}</h2><Link href="/albums" className="text-sm font-medium text-burgundy">{t("home.allAlbums")}</Link></div>
           <div className="grid grid-cols-2 gap-3">
-            {albums.slice(0, 4).map((a) => (
+            {years.map((y) => {
+              const inYear = albums.filter((a) => a.year === y);
+              const a = { year: y, cover: inYear.map((x) => x.cover_url ?? coverFor(x.id)).find(Boolean), id: String(y) };
+              return (
               <Link key={a.id} href={`/albums/${a.year}`} className="group relative block overflow-hidden rounded-xl">
-                <Cover src={a.cover_url ?? coverFor(a.id)} className="h-28" width={400} />
+                <Cover src={a.cover} className="h-28" width={400} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <span className="absolute bottom-2 left-3 font-display text-2xl font-bold text-white">{a.year}</span>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
